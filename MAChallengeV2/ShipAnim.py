@@ -35,7 +35,7 @@ def find_limits(initial_position: np.ndarray, waypoints: np.ndarray) -> np.ndarr
 
 
 def set_plot(waypoints: np.ndarray, current_pos: np.ndarray, current_speed: float,
-             current_err: float, limits: np.ndarray, current_heading: float,
+             current_err: float, pollutant_conc: float, limits: np.ndarray, current_heading: float,
              path: np.ndarray, axis):
     """ Draws the waypoints on interactive plot. Latitude is plotted on the y axis and longitude is plotted on
         the x axis. All lat and lon values should be in DEG format.
@@ -82,6 +82,9 @@ def set_plot(waypoints: np.ndarray, current_pos: np.ndarray, current_speed: floa
     # showing the current track error (in degrees)
     axis.text(waypoints[0, 1] + waypoint_range[1] * 0.4, waypoints[0, 0] + waypoint_range[0] * 0.275,
               'CT error: ' + str(round(current_err, 3)) + ' m')
+    
+    axis.text(waypoints[0, 1] + waypoint_range[1] * 0.4, waypoints[0, 0] + waypoint_range[0] * 0.3,
+            'Pollutant Concentration: ' + str(pollutant_conc) + ' %')
 
     # showing the heading (in degrees)
     axis.text(waypoints[0, 1] - waypoint_range[1] * 1.2, waypoints[0, 0] + waypoint_range[0] * 0.275,
