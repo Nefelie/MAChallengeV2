@@ -46,10 +46,6 @@ ax.set_ylabel('Longitude')
 ax.set_zlabel('Polution percentage')
 ax.set_title('Polution Map')
 plt.legend()
-
-#plt.show()
-
-print("sasasa")
-time.sleep(5)
+plt.show()
 
 
