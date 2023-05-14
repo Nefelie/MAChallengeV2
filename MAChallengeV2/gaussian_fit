@@ -1,0 +1,51 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+import time
+
+def twoD_Gaussian(xy, amplitude, xo, yo, sigma_x, sigma_y, theta, offset):
+    x, y = xy
+    xo = float(xo)
+    yo = float(yo)
+    a = (np.cos(theta)**2)/(2*sigma_x**2) + (np.sin(theta)**2)/(2*sigma_y**2)
+    b = -(np.sin(2*theta))/(4*sigma_x**2) + (np.sin(2*theta))/(4*sigma_y**2)
+    c = (np.sin(theta)**2)/(2*sigma_x**2) + (np.cos(theta)**2)/(2*sigma_y**2)
+    g = offset + amplitude*np.exp( - (a*((x-xo)**2) + 2*b*(x-xo)*(y-yo)
+                            + c*((y-yo)**2)))
+    return g
+
+# Create x and y indices
+x = 5*np.random.rand(100,)
+y = 5*np.random.rand(100,)
+
+# create data + noise
+data = twoD_Gaussian((x, y), 10, 2, 2, 1, 1, 0, 1) + 0.1*np.random.rand(100, )
+
+# fit a gaussian to the data
+popt = curve_fit(twoD_Gaussian, (x, y), data, maxfev=5000, p0=[10, 2, 2, 1, 1, 0, 1])
+# fitted parameters 
+f_p = popt[0]
+
+# create a mesh for the grid (only for plotting)
+x_plot = np.arange(min(x), max(x), 0.01)
+y_plot = np.arange(min(y), max(y), 0.01)
+X, Y = np.meshgrid(x, y)
+Z = twoD_Gaussian((X, Y), f_p[0], f_p[1], f_p[2], f_p[3], f_p[4], f_p[5], f_p[6])
+
+# Create a surface plot
+fig = plt.figure()
+
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(X, Y, Z, cmap='viridis')
+ax.scatter(x, y, data, marker='o', color='red', label='Measured Pollution')
+
+plt.show()
+# Set labels and title
+ax.set_xlabel('Latitude')
+ax.set_ylabel('Longitude')
+ax.set_zlabel('Polution percentage')
+ax.set_title('Polution Map')
+plt.legend()
+plt.show()
+
+
