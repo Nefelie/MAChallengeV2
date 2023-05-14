@@ -56,7 +56,12 @@ def set_plot(waypoints: np.ndarray, current_pos: np.ndarray, current_speed: floa
 
     # set the label of the plot
     axis.set_xlabel('Longitude')
+    
     axis.set_ylabel('Latitude')
+
+    axis.ticklabel_format(style='plain', axis='y')
+    axis.get_yaxis().get_major_formatter().set_useOffset(False)
+
 
     # set the limits of the plot
     plt.xlim(limits[0])
@@ -69,36 +74,36 @@ def set_plot(waypoints: np.ndarray, current_pos: np.ndarray, current_speed: floa
         
     # plot a dashed line between the waypoints
     axis.plot(waypoints[:, 1], waypoints[:, 0], color='red', lw=1, linestyle='dashed' ) 
-    
+
     # plotting the current position
     axis.plot(current_pos[1], current_pos[0], color='blue', markersize=5, marker='o')
-    plt.title('Position: ' + str(round(current_pos[0], 6)) + '$^o$ '
-              + str(round(current_pos[1], 6)) + '$^o$')
-
-    # showing the speed
-    axis.text(waypoints[0, 1] + waypoint_range[1] * 0.4, waypoints[0, 0] + waypoint_range[0] * 0.25,
-              'Speed: ' + str(round(current_speed, 3))+ ' kts')
-
-    # showing the current track error (in degrees)
-    axis.text(waypoints[0, 1] + waypoint_range[1] * 0.4, waypoints[0, 0] + waypoint_range[0] * 0.275,
-              'CT error: ' + str(round(current_err, 3)) + ' m')
-    
-    axis.text(waypoints[0, 1] + waypoint_range[1] * 0.4, waypoints[0, 0] + waypoint_range[0] * 0.3,
-            'Pollutant Concentration: ' + str(pollutant_conc) + ' %')
-
-    # showing the heading (in degrees)
-    axis.text(waypoints[0, 1] - waypoint_range[1] * 1.2, waypoints[0, 0] + waypoint_range[0] * 0.275,
-              'Heading:' + str(round(current_heading, 3)) + '$^o$')
-
-    # draw an arrow pointing to the heading
-    plt.annotate("", xy=(current_pos[1] + 0.0001*np.cos(current_heading), current_pos[0] + 0.0001*np.sin(current_heading)),
-                 xytext=(current_pos[1], current_pos[0]), arrowprops=dict(arrowstyle="->"))
 
     # show the path followed by the boat
     axis.plot(path[1], path[0], lw=2, markersize=10, color='black')
 
+    # show the speed
+    axis.text(0.01, 0.95, 'Speed: ' + str(round(current_speed, 3))+ ' kts', transform=axis.transAxes, fontsize=12,
+            verticalalignment='top', horizontalalignment='left')
+
+    # show the current track error (in degrees)
+    axis.text(0.01, 0.9, 'CT error: ' + str(round(current_err, 3)) + ' m', transform=axis.transAxes, fontsize=12,
+            verticalalignment='top', horizontalalignment='left')
+
+    # show the pollutant concentration
+    axis.text(0.99, 0.95, 'Pollutant Concentration: ' + str(pollutant_conc) + ' %', transform=axis.transAxes, fontsize=12,
+            verticalalignment='top', horizontalalignment='right')
+
+    # show the heading (in degrees)
+    axis.text(0.99, 0.9, 'Heading: ' + str(round(current_heading, 3)) + '$^o$', transform=axis.transAxes, fontsize=12,
+            verticalalignment='top', horizontalalignment='right')
+
+    # set the title
+    plt.title('Position: ' + str(round(current_pos[0], 6)) + '$^o$ ' + str(round(current_pos[1], 6)) + '$^o$')
+
     # invert x axis as longitude in the west
     plt.gca().invert_xaxis()
+
+
 
 
 

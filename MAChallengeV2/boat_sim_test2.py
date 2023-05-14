@@ -95,7 +95,7 @@ class Simulator:
         waypoints_deg = []
         for track in self.track_list:
             for waypoint_dmm in track:
-                waypoints_deg.append([DMM_to_DEG(waypoint_dmm)[0], DMM_to_DEG(waypoint_dmm)[1]])
+                waypoints_deg.append([DMM_to_DEG(waypoint_dmm)[0], waypoint_dmm[1]])
 
         # return the waypoints
         return np.array(waypoints_deg)
@@ -247,11 +247,10 @@ class Simulator:
                 #(PID_output)
 
     def __update_SIG(self):
-        t1 = time.perf_counter()
+        # t1 = time.perf_counter()
         resp = self._socket.recv(1024).decode()
         # print(f"time {time.perf_counter()}")
         conc = resp.split(',')[1].split('*')[0] # concentration of pollutant
-        print(conc)
         self._current_SIG = conc
 
     # find the next heading
@@ -305,10 +304,14 @@ class Simulator:
         ### THIS PART IS JUST FOR PLOTTING ####
         # the list of waypoints in deg
         waypoints_list = Simulator.find_waypoints_deg(self)
+        
 
         # the limits for the plot
-        plot_limits = find_limits(initial_position=np.array(DMM_to_DEG(self.initial_pos)), waypoints=waypoints_list)
-
+        # temp = self.initial_pos
+        temp = (DMM_to_DEG(self.initial_pos)[0], self.initial_pos[1])
+        print(temp)
+        plot_limits = find_limits(initial_position=np.array(temp), waypoints=waypoints_list)
+        print(plot_limits)
         # Define a function to handle the keyboard interrupt event
         def on_key_press(event):
             if event.key == 'p':
@@ -324,16 +327,19 @@ class Simulator:
         # for the path followed by the boat
         past_lat = []
         past_lon = []
+        past_SIG = []
 
         # running until the mission is achieved
 
         aaa = 0
         while not self._mission:
+        
             aaa = aaa + 1
             start_time = time.time()
 
             # update position of the boat
             Simulator.__update_position(self)
+
 
             # update current track and waypoint
             # Simulator.__update_current_track(self)
@@ -346,15 +352,22 @@ class Simulator:
             if aaa % 10 == 0:
                 Simulator.__update_SIG(self)
 
+
+
             # Convert format of waypoint from DMM to DEG
             current_waypoint_DEG = DMM_to_DEG(self._current_waypoint)
             current_pos_DEG = DMM_to_DEG(self._current_pos)
+
+            current_pos_DEG = (current_pos_DEG[0], self._current_pos[1])
+            # print(current_pos_DEG)
+
+
             # cross_track_error = LOS_latlon(self._current_pos, self._last_waypoint, self._current_waypoint)[1]
 
             # check whether the mission has finished (last waypoint has been reached)
             distance = call_distance(current_waypoint_DEG, current_pos_DEG)[0]
 
-            print('current waypoint:', self._current_waypoint)
+            # print('current waypoint:', self._current_waypoint)
             # print('current pos:', self._current_pos)
             # print(find_waypoint_name(self._current_waypoint))
             # print('current track:', self.track_list.index(self._current_track))
@@ -413,6 +426,14 @@ class Simulator:
             # only for plotting
             past_lat.append(current_pos_DEG[0])
             past_lon.append(current_pos_DEG[1])
+
+            if self._current_SIG is not None:
+                past_SIG.append(float(self._current_SIG))
+            else:
+                past_SIG.append(self._current_SIG)
+
+
+
 
             # the path followed by the boat
             track = np.array([past_lat, past_lon])
