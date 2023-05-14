@@ -95,7 +95,7 @@ class Simulator:
         waypoints_deg = []
         for track in self.track_list:
             for waypoint_dmm in track:
-                waypoints_deg.append([DMM_to_DEG(waypoint_dmm)[0], DMM_to_DEG(waypoint_dmm)[1]])
+                waypoints_deg.append([DMM_to_DEG(waypoint_dmm)[0], waypoint_dmm[1]])
 
         # return the waypoints
         return np.array(waypoints_deg)
@@ -132,7 +132,6 @@ class Simulator:
             out = decode_response(ser_message)
 
         # extract lat and long
-        # print(out)
         lat = float(out[0])
         long = float(out[2])
         speed = float(out[4])
@@ -252,7 +251,6 @@ class Simulator:
         resp = self._socket.recv(1024).decode()
         # print(f"time {time.perf_counter()}")
         conc = resp.split(',')[1].split('*')[0] # concentration of pollutant
-        # print(conc)
         self._current_SIG = conc
 
     # find the next heading
@@ -288,7 +286,7 @@ class Simulator:
 
         # create connection with the hardware
         Simulator.create_connection(self, 'COM3', 115200, 1)
-        # Simulator.create_tcp_conn(self, '127.0.0.1', 5001)
+        Simulator.create_tcp_conn(self, '127.0.0.1', 5001)
 
         set_thrust(self._ser, thrust=10)
 
@@ -306,10 +304,14 @@ class Simulator:
         ### THIS PART IS JUST FOR PLOTTING ####
         # the list of waypoints in deg
         waypoints_list = Simulator.find_waypoints_deg(self)
+        
 
         # the limits for the plot
-        plot_limits = find_limits(initial_position=np.array(DMM_to_DEG(self.initial_pos)), waypoints=waypoints_list)
-
+        # temp = self.initial_pos
+        temp = (DMM_to_DEG(self.initial_pos)[0], self.initial_pos[1])
+        print(temp)
+        plot_limits = find_limits(initial_position=np.array(temp), waypoints=waypoints_list)
+        print(plot_limits)
         # Define a function to handle the keyboard interrupt event
         def on_key_press(event):
             if event.key == 'p':
@@ -325,18 +327,19 @@ class Simulator:
         # for the path followed by the boat
         past_lat = []
         past_lon = []
+        past_SIG = []
 
         # running until the mission is achieved
 
-        # Simulator.create_tcp_conn(self, '127.0.0.1', 5001)
         aaa = 0
         while not self._mission:
+        
             aaa = aaa + 1
             start_time = time.time()
 
-            
             # update position of the boat
             Simulator.__update_position(self)
+
 
             # update current track and waypoint
             # Simulator.__update_current_track(self)
@@ -349,9 +352,16 @@ class Simulator:
             if aaa % 10 == 0:
                 Simulator.__update_SIG(self)
 
+
+
             # Convert format of waypoint from DMM to DEG
             current_waypoint_DEG = DMM_to_DEG(self._current_waypoint)
             current_pos_DEG = DMM_to_DEG(self._current_pos)
+
+            current_pos_DEG = (current_pos_DEG[0], self._current_pos[1])
+            # print(current_pos_DEG)
+
+
             # cross_track_error = LOS_latlon(self._current_pos, self._last_waypoint, self._current_waypoint)[1]
 
             # check whether the mission has finished (last waypoint has been reached)
@@ -367,7 +377,6 @@ class Simulator:
             # find the next heading for the boat
             heading, cross_t_err = Simulator.find_heading(self)
 
-            
             # print(self._current_speed)
             # bearing_value = bearing(self._current_pos, self._current_waypoint)
             # find average cross track error
@@ -391,11 +400,8 @@ class Simulator:
 
             # implement heading in the boat (send the command to the external hardware)
 
-
             # print(-heading)
             follow_heading(self._ser, -heading)
-
-
 
             # print(self._current_SIG)
 
@@ -420,6 +426,14 @@ class Simulator:
             # only for plotting
             past_lat.append(current_pos_DEG[0])
             past_lon.append(current_pos_DEG[1])
+
+            if self._current_SIG is not None:
+                past_SIG.append(float(self._current_SIG))
+            else:
+                past_SIG.append(self._current_SIG)
+
+
+
 
             # the path followed by the boat
             track = np.array([past_lat, past_lon])
