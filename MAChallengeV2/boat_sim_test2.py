@@ -132,7 +132,6 @@ class Simulator:
             out = decode_response(ser_message)
 
         # extract lat and long
-        # print(out)
         lat = float(out[0])
         long = float(out[2])
         speed = float(out[4])
@@ -248,11 +247,11 @@ class Simulator:
                 #(PID_output)
 
     def __update_SIG(self):
-        # t1 = time.perf_counter()
+        t1 = time.perf_counter()
         resp = self._socket.recv(1024).decode()
         # print(f"time {time.perf_counter()}")
         conc = resp.split(',')[1].split('*')[0] # concentration of pollutant
-        # print(conc)
+        print(conc)
         self._current_SIG = conc
 
     # find the next heading
@@ -288,7 +287,7 @@ class Simulator:
 
         # create connection with the hardware
         Simulator.create_connection(self, 'COM3', 115200, 1)
-        # Simulator.create_tcp_conn(self, '127.0.0.1', 5001)
+        Simulator.create_tcp_conn(self, '127.0.0.1', 5001)
 
         set_thrust(self._ser, thrust=10)
 
@@ -328,13 +327,11 @@ class Simulator:
 
         # running until the mission is achieved
 
-        # Simulator.create_tcp_conn(self, '127.0.0.1', 5001)
         aaa = 0
         while not self._mission:
             aaa = aaa + 1
             start_time = time.time()
 
-            
             # update position of the boat
             Simulator.__update_position(self)
 
@@ -357,7 +354,7 @@ class Simulator:
             # check whether the mission has finished (last waypoint has been reached)
             distance = call_distance(current_waypoint_DEG, current_pos_DEG)[0]
 
-            # print('current waypoint:', self._current_waypoint)
+            print('current waypoint:', self._current_waypoint)
             # print('current pos:', self._current_pos)
             # print(find_waypoint_name(self._current_waypoint))
             # print('current track:', self.track_list.index(self._current_track))
@@ -367,7 +364,6 @@ class Simulator:
             # find the next heading for the boat
             heading, cross_t_err = Simulator.find_heading(self)
 
-            
             # print(self._current_speed)
             # bearing_value = bearing(self._current_pos, self._current_waypoint)
             # find average cross track error
@@ -391,11 +387,8 @@ class Simulator:
 
             # implement heading in the boat (send the command to the external hardware)
 
-
             # print(-heading)
             follow_heading(self._ser, -heading)
-
-
 
             # print(self._current_SIG)
 

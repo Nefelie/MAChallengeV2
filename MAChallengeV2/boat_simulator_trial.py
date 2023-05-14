@@ -53,6 +53,8 @@ class Simulator:
         self.data_file = data_file
         self.track_list = load_wpl(data_file)
 
+        self._current_SIG = None
+
         # the current position of the boat, should be updated each time in the loop
         self._current_pos = None
 
@@ -108,7 +110,7 @@ class Simulator:
         """ Update current position from external readings of GPS."""
         # read current input from serial
         ser_message = self._ser.readline()
-
+        print(ser_message)
         if decode_response(ser_message) == None:
             out = self.prev_out
 
@@ -116,24 +118,30 @@ class Simulator:
             # decode message into lat, long, speed, course, utc_time
             out = decode_response(ser_message)
 
+        if out[0] == 0:
         # extract lat and long
-        lat = float(out[0])
-        long = float(out[2])
-        speed = float(out[4])
-        time = float(out[6])
-        try:
-          self._current_heading = float(out[5])
-        except:
-            self._current_heading = 0
+            lat = float(out[1])
+            long = float(out[3])
+            speed = float(out[5])
+            time = float(out[7])
+            try:
+                self._current_heading = float(out[6])
+            except:
+                self._current_heading = 0
 
-        # lat_dir = str(out[1])
-        # lon_dir = str(out[3])
-        # update position of the boat
-        self.prev_out = out
-        self._current_pos = np.array([lat, long])
-        self._current_speed = speed
-        self._current_time = time
-        # print("current position: ", self._current_pos)
+            # lat_dir = str(out[1])
+            # lon_dir = str(out[3])
+            # update position of the boat
+            self.prev_out = out
+            self._current_pos = np.array([lat, long])
+            self._current_speed = speed
+            self._current_time = time
+            # print("current position: ", self._current_pos)
+
+        if out[0] == 1:
+            conc = float(out[1])
+            self._current_SIG = conc
+
 
     def __update_current_track(self):
         """ Change current track to the next track in the in the list"""
@@ -265,6 +273,7 @@ class Simulator:
 
         # create connection with the hardware
         Simulator.create_connection(self, 'COM3', 115200, 1)
+        Simulator.create_connection(self, 'COM4', 115200, 1)
 
         set_thrust(self._ser, thrust=10)
 

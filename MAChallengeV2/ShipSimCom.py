@@ -89,5 +89,3 @@ def decode_response(message):
 
         
 ser.close() # close the serial port when done
-
-
