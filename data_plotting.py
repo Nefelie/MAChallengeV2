@@ -31,21 +31,43 @@ pollution = data[:, 2]
 print(len(pollution))
 # Reshape pollution into a 2D array
 
+def twoD_Gaussian(xy, amplitude, xo, yo, sigma_x, sigma_y, theta, offset):
+    x, y = xy
+    xo = float(xo)
+    yo = float(yo)
+    a = (np.cos(theta)**2)/(2*sigma_x**2) + (np.sin(theta)**2)/(2*sigma_y**2)
+    b = -(np.sin(2*theta))/(4*sigma_x**2) + (np.sin(2*theta))/(4*sigma_y**2)
+    c = (np.sin(theta)**2)/(2*sigma_x**2) + (np.cos(theta)**2)/(2*sigma_y**2)
+    g = offset + amplitude*np.exp( - (a*((x-xo)**2) + 2*b*(x-xo)*(y-yo)
+                            + c*((y-yo)**2)))
+    return g
 
-print(data)
 
+# fit a gaussian to the data
+popt = curve_fit(twoD_Gaussian, (longitude, latitude), pollution, maxfev=5000, p0=[10, 2, 2, 1, 1, 0, 1])
+# fitted parameters 
+f_p = popt[0]
 
+# create a mesh for the grid (only for plotting)
+x_plot = np.arange(min(longitude), max(longitude), 0.01)
+y_plot = np.arange(min(latitude), max(latitude), 0.01)
+X, Y = np.meshgrid(longitude, latitude)
+Z = twoD_Gaussian((X, Y), f_p[0], f_p[1], f_p[2], f_p[3], f_p[4], f_p[5], f_p[6])
 
+print('starting plot')
+# Create a surface plot
+fig = plt.figure()
 
-# print('starting plot')
-# # Create a surface plot
-# fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(X, Y, Z, cmap='viridis')
+ax.scatter(longitude, latitude, data, marker='o', color='red', label='Measured Pollution')
+
 # ax = fig.add_subplot(111, projection='3d')
 # longitude_mesh, latitude_mesh = np.meshgrid(longitude, latitude)
-# ax.plot_surface(longitude_mesh, latitude_mesh, data, cmap='viridis')
+# ax.plot_surface(longitude_mesh, latitude_mesh, gaussian, cmap='viridis')
 
-# ax.set_xlabel('Longitude')
-# ax.set_ylabel('Latitude')
-# ax.set_zlabel('Pollution percentage')
-# ax.set_title('Pollution Map')
-# plt.show()
+ax.set_xlabel('Longitude')
+ax.set_ylabel('Latitude')
+ax.set_zlabel('Pollution percentage')
+ax.set_title('Pollution Map')
+plt.show()
